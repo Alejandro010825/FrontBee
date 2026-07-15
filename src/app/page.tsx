@@ -12,6 +12,7 @@ interface Sugerencia {
 }
 
 export default function Home() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [reporte, setReporte] = useState("");
   const [tipo, setTipo] = useState("reporte");
   
@@ -91,11 +92,14 @@ export default function Home() {
       if (result.aprobado) {
         Swal.fire({
           icon: "success",
-          title: tipo === "reporte" ? "¡Reporte Recibido!" : "¡Sugerencia Aprobada!",
-          text: result.mensaje || "Tu mensaje ha sido aprobado y almacenado de forma anónima.",
+          title: tipo === "reporte" ? "¡Reporte Privado Recibido!" : "¡Sugerencia Pública Aprobada!",
+          text: tipo === "reporte" 
+            ? "Tu reporte anónimo ha sido validado por IA y guardado de forma privada en el sistema."
+            : "Tu propuesta anónima fue aprobada y ya está publicada en el muro escolar.",
           confirmButtonColor: "#10b981"
         });
         setReporte("");
+        setIsModalOpen(false);
         if (tipo === "sugerencia") {
           await cargarSugerencias();
         }
@@ -103,7 +107,7 @@ export default function Home() {
         Swal.fire({
           icon: "error",
           title: "Mensaje Bloqueado",
-          text: result.mensaje || "Se ha detectado lenguaje inapropiado o agresivo. Por favor, sé respetuoso.",
+          text: result.mensaje || "Se ha detectado una infracción a las normas de convivencia escolar en el contenido. Por favor, sé respetuoso.",
           confirmButtonColor: "#ef4444"
         });
       }
@@ -151,87 +155,40 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center justify-start min-h-screen bg-slate-50 text-slate-800 font-sans p-6 selection:bg-amber-100 selection:text-amber-900">
       
-      <header className="text-center mt-6 mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-amber-500/10 border border-amber-500/20 text-amber-600 mb-4 animate-bounce">
-          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-          </svg>
+      <header className="w-full max-w-xl mt-6 mb-8 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-2xl font-black bg-gradient-to-r from-amber-500 to-orange-600 bg-clip-text text-transparent">
+              BEE
+            </h1>
+            <p className="text-[10px] font-extrabold tracking-widest text-amber-600 uppercase">
+              Buzón Escolar
+            </p>
+          </div>
         </div>
-        <h1 className="text-4xl font-black bg-gradient-to-r from-amber-500 via-orange-600 to-yellow-600 bg-clip-text text-transparent mb-1">
-          BEE
-        </h1>
-        <p className="text-xs font-bold tracking-widest text-amber-600 uppercase mb-2">
-          Buzón Escolar Electrónico
-        </p>
-        <p className="text-sm text-slate-500 max-w-sm mx-auto">
-          Plataforma anónima de retroalimentación escolar y convivencia inteligente.
-        </p>
+
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="py-3 px-5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-sm hover:scale-[1.03] active:scale-[0.97] transition-all duration-200 shadow-md shadow-amber-500/10 cursor-pointer flex items-center gap-1.5"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+          </svg>
+          Nueva Sugerencia / Reporte
+        </button>
       </header>
 
-      <main className="w-full max-w-xl space-y-8">
-        <section className="bg-white border border-slate-200 shadow-xl rounded-3xl p-8 transition-all duration-300">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
-              <button
-                type="button"
-                onClick={() => setTipo("reporte")}
-                className={`flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer ${
-                  tipo === "reporte"
-                    ? "bg-amber-500 text-white shadow-md"
-                    : "text-slate-500 hover:text-slate-700"
-                }`}
-              >
-                Reporte Privado
-              </button>
-              <button
-                type="button"
-                onClick={() => setTipo("sugerencia")}
-                className={`flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer ${
-                  tipo === "sugerencia"
-                    ? "bg-amber-500 text-white shadow-md"
-                    : "text-slate-500 hover:text-slate-700"
-                }`}
-              >
-                Sugerencia Pública
-              </button>
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
-                {tipo === "reporte" ? "Detalles del Reporte (Anónimo y Privado)" : "Detalles de la Sugerencia (Anónimo y Público)"}
-              </label>
-              <textarea
-                value={reporte}
-                onChange={(e) => setReporte(e.target.value)}
-                placeholder={
-                  tipo === "reporte"
-                    ? "Describe de forma respetuosa la situación o reporte..."
-                    : "Escribe tu propuesta o idea para mejorar la escuela..."
-                }
-                rows={5}
-                className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all duration-200 resize-none"
-              />
-              <div className="flex justify-between items-center text-xs text-slate-400">
-                <span>Mínimo 5 caracteres</span>
-                <span>{reporte.length} caracteres</span>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={reporte.trim().length < 5}
-              className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 text-white font-bold hover:scale-[1.01] active:scale-[0.99] disabled:opacity-40 disabled:hover:scale-100 disabled:pointer-events-none transition-all duration-200 shadow-lg shadow-amber-500/10 cursor-pointer"
-            >
-              Enviar {tipo === "reporte" ? "Reporte Anónimo" : "Sugerencia Anónima"}
-            </button>
-          </form>
-        </section>
-
+      <main className="w-full max-w-xl space-y-6">
         <section className="bg-white border border-slate-200 shadow-xl rounded-3xl p-8 space-y-6 transition-all duration-300">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="text-xl font-black text-slate-800">Muro de Sugerencias</h2>
-              <p className="text-xs text-slate-400">Propuestas aprobadas por la comunidad escolar</p>
+              <p className="text-xs text-slate-400 font-medium">Propuestas aprobadas por la comunidad escolar</p>
             </div>
             
             <input
@@ -257,7 +214,7 @@ export default function Home() {
             </div>
           ) : sugerenciasFiltradas.length === 0 ? (
             <div className="text-center py-8 text-slate-400 border-2 border-dashed border-slate-100 rounded-2xl text-sm">
-              {busqueda ? "No hay sugerencias que coincidan con la búsqueda." : "Aún no hay sugerencias públicas aprobadas. ¡Propón la primera!"}
+              {busqueda ? "No hay sugerencias que coincidan con la búsqueda." : "Aún no hay sugerencias públicas aprobadas. ¡Sé el primero en proponer una!"}
             </div>
           ) : (
             <div className="space-y-4">
@@ -266,7 +223,7 @@ export default function Home() {
                   key={sug.id}
                   className="p-5 border border-slate-100 bg-slate-50 hover:bg-white hover:border-slate-200 hover:shadow-md rounded-2xl flex flex-col justify-between gap-4 transition-all duration-200"
                 >
-                  <p className="text-sm text-slate-700 leading-relaxed font-medium">
+                  <p className="text-sm text-slate-700 leading-relaxed font-semibold">
                     {sug.texto}
                   </p>
                   
@@ -295,6 +252,82 @@ export default function Home() {
           )}
         </section>
       </main>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-3xl p-8 max-w-xl w-full shadow-2xl relative transition-all transform scale-100 duration-300">
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors p-1"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-black text-slate-800 mb-1">Crear Entrada</h2>
+              <p className="text-xs text-slate-400">Selecciona el tipo de buzón y escribe tu mensaje</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setTipo("reporte")}
+                  className={`flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer ${
+                    tipo === "reporte"
+                      ? "bg-amber-500 text-white shadow-md"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  Reporte Privado
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTipo("sugerencia")}
+                  className={`flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer ${
+                    tipo === "sugerencia"
+                      ? "bg-amber-500 text-white shadow-md"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  Sugerencia Pública
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  {tipo === "reporte" ? "Detalles del Reporte (Anónimo y Privado)" : "Detalles de la Sugerencia (Anónimo y Público)"}
+                </label>
+                <textarea
+                  value={reporte}
+                  onChange={(e) => setReporte(e.target.value)}
+                  placeholder={
+                    tipo === "reporte"
+                      ? "Describe de forma respetuosa la situación o reporte..."
+                      : "Escribe tu propuesta o idea para mejorar la escuela..."
+                  }
+                  rows={5}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all duration-200 resize-none"
+                />
+                <div className="flex justify-between items-center text-xs text-slate-400">
+                  <span>Mínimo 5 caracteres</span>
+                  <span>{reporte.length} caracteres</span>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={reporte.trim().length < 5}
+                className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 text-white font-bold hover:scale-[1.01] active:scale-[0.99] disabled:opacity-40 disabled:hover:scale-100 disabled:pointer-events-none transition-all duration-200 shadow-lg shadow-amber-500/10 cursor-pointer"
+              >
+                Enviar {tipo === "reporte" ? "Reporte Anónimo" : "Sugerencia Anónima"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
