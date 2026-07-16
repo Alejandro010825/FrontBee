@@ -20,15 +20,17 @@ export default function Home() {
   const [loadingSugerencias, setLoadingSugerencias] = useState(true);
   const [errorSugerencias, setErrorSugerencias] = useState(false);
   const [busqueda, setBusqueda] = useState("");
+  
+  const [tabActual, setTabActual] = useState<"sugerencia" | "reporte">("sugerencia");
 
   const proxyUrl = process.env.NEXT_PUBLIC_PROXY_URL || "http://localhost:3000/api/moderar";
   const proxyBase = proxyUrl.replace("/api/moderar", "");
 
-  const cargarSugerencias = async () => {
+  const cargarSugerencias = async (tipoTab: "sugerencia" | "reporte" = tabActual) => {
     setLoadingSugerencias(true);
     setErrorSugerencias(false);
     try {
-      const response = await fetch(`${proxyBase}/api/reportes`, {
+      const response = await fetch(`${proxyBase}/api/reportes?tipo=${tipoTab}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json"
@@ -49,8 +51,8 @@ export default function Home() {
   };
 
   useEffect(() => {
-    cargarSugerencias();
-  }, []);
+    cargarSugerencias(tabActual);
+  }, [tabActual]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,16 +94,18 @@ export default function Home() {
       if (result.aprobado) {
         Swal.fire({
           icon: "success",
-          title: tipo === "reporte" ? "¡Reporte Privado Recibido!" : "¡Sugerencia Pública Aprobada!",
+          title: tipo === "reporte" ? "¡Reporte Público Aprobado!" : "¡Sugerencia Pública Aprobada!",
           text: tipo === "reporte" 
-            ? "Tu reporte anónimo ha sido validado por IA y guardado de forma privada en el sistema."
+            ? "Tu reporte anónimo ha sido validado por IA y publicado en el muro de reportes."
             : "Tu propuesta anónima fue aprobada y ya está publicada en el muro escolar.",
           confirmButtonColor: "#10b981"
         });
         setReporte("");
         setIsModalOpen(false);
-        if (tipo === "sugerencia") {
-          await cargarSugerencias();
+        if (tipo === tabActual) {
+          await cargarSugerencias(tabActual);
+        } else {
+          setTabActual(tipo as "sugerencia" | "reporte");
         }
       } else {
         Swal.fire({
@@ -179,16 +183,45 @@ export default function Home() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
           </svg>
-          Nueva Sugerencia / Reporte
+          Nueva Entrada
         </button>
       </header>
 
       <main className="w-full max-w-xl space-y-6">
+        <div className="flex bg-slate-200/60 p-1 rounded-2xl border border-slate-200/40 w-full">
+          <button
+            onClick={() => setTabActual("sugerencia")}
+            className={`flex-1 py-3 text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer ${
+              tabActual === "sugerencia"
+                ? "bg-white text-slate-800 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            Muro de Sugerencias
+          </button>
+          <button
+            onClick={() => setTabActual("reporte")}
+            className={`flex-1 py-3 text-xs font-bold rounded-xl transition-all duration-200 cursor-pointer ${
+              tabActual === "reporte"
+                ? "bg-white text-slate-800 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            Muro de Reportes
+          </button>
+        </div>
+
         <section className="bg-white border border-slate-200 shadow-xl rounded-3xl p-8 space-y-6 transition-all duration-300">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 className="text-xl font-black text-slate-800">Muro de Sugerencias</h2>
-              <p className="text-xs text-slate-400 font-medium">Propuestas aprobadas por la comunidad escolar</p>
+              <h2 className="text-xl font-black text-slate-800">
+                {tabActual === "sugerencia" ? "Sugerencias Escolares" : "Reportes de Alumnos"}
+              </h2>
+              <p className="text-xs text-slate-400 font-medium">
+                {tabActual === "sugerencia" 
+                  ? "Propuestas de mejora aprobadas por la comunidad" 
+                  : "Incidencias públicas validadas de forma anónima"}
+              </p>
             </div>
             
             <input
@@ -214,7 +247,7 @@ export default function Home() {
             </div>
           ) : sugerenciasFiltradas.length === 0 ? (
             <div className="text-center py-8 text-slate-400 border-2 border-dashed border-slate-100 rounded-2xl text-sm">
-              {busqueda ? "No hay sugerencias que coincidan con la búsqueda." : "Aún no hay sugerencias públicas aprobadas. ¡Sé el primero en proponer una!"}
+              {busqueda ? "No hay resultados que coincidan." : "Aún no hay entradas públicas en este muro."}
             </div>
           ) : (
             <div className="space-y-4">
@@ -281,7 +314,7 @@ export default function Home() {
                       : "text-slate-500 hover:text-slate-700"
                   }`}
                 >
-                  Reporte Privado
+                  Reporte Público
                 </button>
                 <button
                   type="button"
@@ -298,7 +331,7 @@ export default function Home() {
 
               <div className="space-y-2">
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  {tipo === "reporte" ? "Detalles del Reporte (Anónimo y Privado)" : "Detalles de la Sugerencia (Anónimo y Público)"}
+                  {tipo === "reporte" ? "Detalles del Reporte (Anónimo y Público)" : "Detalles de la Sugerencia (Anónimo y Público)"}
                 </label>
                 <textarea
                   value={reporte}
